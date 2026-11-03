@@ -298,8 +298,29 @@ func (s *StepCreateVM) buildVMSpec(state multistep.StateBag, client *hvclient.Ha
 			},
 		},
 	}
+	applyFirmwareConfig(&vm.Spec.Template.Spec.Domain, cfg)
 
 	return vm, nil
+}
+
+// applyFirmwareConfig sets UEFI, secure boot and vTPM on the domain. When
+// nothing is enabled the domain is left untouched so KubeVirt boots with BIOS.
+func applyFirmwareConfig(domain *hvclient.Domain, cfg *Config) {
+	if cfg.EFIBoot {
+		domain.Firmware = &hvclient.Firmware{
+			Bootloader: &hvclient.Bootloader{
+				EFI: &hvclient.EFI{SecureBoot: cfg.SecureBoot},
+			},
+		}
+		if cfg.SecureBoot {
+			domain.Features = &hvclient.Features{
+				SMM: &hvclient.FeatureState{Enabled: true},
+			}
+		}
+	}
+	if cfg.VTPM {
+		domain.Devices.TPM = &hvclient.TPMDevice{}
+	}
 }
 
 func appendCloudInitNoCloudDiskAndVolume(disks []hvclient.DiskTarget, volumes []hvclient.Volume, cfg *Config, vmName string) ([]hvclient.DiskTarget, []hvclient.Volume) {

@@ -75,6 +75,20 @@ type Config struct {
 	// Defaults to "harvester-longhorn".
 	StorageClass string `mapstructure:"storage_class"`
 
+	// --- Firmware ---
+
+	// EFIBoot boots the build VM with UEFI firmware instead of BIOS.
+	// Defaults to false.
+	EFIBoot bool `mapstructure:"efi_boot"`
+
+	// SecureBoot enables UEFI secure boot (and the SMM feature it requires).
+	// Requires EFIBoot. Defaults to false.
+	SecureBoot bool `mapstructure:"secure_boot"`
+
+	// VTPM attaches an emulated, non-persistent TPM to the build VM.
+	// Defaults to false.
+	VTPM bool `mapstructure:"vtpm"`
+
 	// --- Network ---
 
 	// NetworkName is the name of the Harvester network attachment or pod
@@ -235,6 +249,10 @@ func (c *Config) Prepare(builderType BuilderType, raws ...interface{}) ([]string
 		if usesHTTPTemplateVars(c.BootCommand) {
 			errs = appendErr(errs, errors.New("'boot_command' cannot reference {{.HTTPIP}}/{{.HTTPPort}} when using cloud-init NoCloud fields"))
 		}
+	}
+
+	if c.SecureBoot && !c.EFIBoot {
+		errs = appendErr(errs, errors.New("'secure_boot' requires 'efi_boot' to be true"))
 	}
 
 	if cdErrs := c.CDConfig.Prepare(&c.ctx); len(cdErrs) > 0 {

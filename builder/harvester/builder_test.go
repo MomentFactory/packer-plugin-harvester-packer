@@ -92,6 +92,41 @@ func TestConfigPrepare_Clone(t *testing.T) {
 			t.Fatal("expected error for missing source_image_name, got nil")
 		}
 	})
+
+	t.Run("efi_secure_boot_and_vtpm", func(t *testing.T) {
+		cfg := &Config{}
+		_, _, err := cfg.Prepare(BuilderTypeClone, map[string]interface{}{
+			"harvester_url":     "https://192.168.1.1:6443",
+			"token":             "testtoken",
+			"source_image_name": "ubuntu-24-04",
+			"ssh_username":      "ubuntu",
+			"ssh_password":      "secret",
+			"efi_boot":          true,
+			"secure_boot":       true,
+			"vtpm":              true,
+		})
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if !cfg.EFIBoot || !cfg.SecureBoot || !cfg.VTPM {
+			t.Fatalf("expected firmware options to be set, got efi=%v secure=%v vtpm=%v", cfg.EFIBoot, cfg.SecureBoot, cfg.VTPM)
+		}
+	})
+
+	t.Run("secure_boot_requires_efi_boot", func(t *testing.T) {
+		cfg := &Config{}
+		_, _, err := cfg.Prepare(BuilderTypeClone, map[string]interface{}{
+			"harvester_url":     "https://192.168.1.1:6443",
+			"token":             "testtoken",
+			"source_image_name": "ubuntu-24-04",
+			"ssh_username":      "ubuntu",
+			"ssh_password":      "secret",
+			"secure_boot":       true,
+		})
+		if err == nil {
+			t.Fatal("expected error for secure_boot without efi_boot, got nil")
+		}
+	})
 }
 
 // TestConfigDefaults verifies that default values are applied correctly.

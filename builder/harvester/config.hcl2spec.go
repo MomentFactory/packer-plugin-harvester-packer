@@ -80,6 +80,9 @@ type FlatConfig struct {
 	MemoryMB                  *int              `mapstructure:"memory_mb" cty:"memory_mb" hcl:"memory_mb"`
 	DiskSize                  *string           `mapstructure:"disk_size" cty:"disk_size" hcl:"disk_size"`
 	StorageClass              *string           `mapstructure:"storage_class" cty:"storage_class" hcl:"storage_class"`
+	EFIBoot                   *bool             `mapstructure:"efi_boot" cty:"efi_boot" hcl:"efi_boot"`
+	SecureBoot                *bool             `mapstructure:"secure_boot" cty:"secure_boot" hcl:"secure_boot"`
+	VTPM                      *bool             `mapstructure:"vtpm" cty:"vtpm" hcl:"vtpm"`
 	NetworkName               *string           `mapstructure:"network_name" cty:"network_name" hcl:"network_name"`
 	NetworkNamespace          *string           `mapstructure:"network_namespace" cty:"network_namespace" hcl:"network_namespace"`
 	ISOImageName              *string           `mapstructure:"iso_image_name" cty:"iso_image_name" hcl:"iso_image_name"`
@@ -184,6 +187,9 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"memory_mb":                    &hcldec.AttrSpec{Name: "memory_mb", Type: cty.Number, Required: false},
 		"disk_size":                    &hcldec.AttrSpec{Name: "disk_size", Type: cty.String, Required: false},
 		"storage_class":                &hcldec.AttrSpec{Name: "storage_class", Type: cty.String, Required: false},
+		"efi_boot":                     &hcldec.AttrSpec{Name: "efi_boot", Type: cty.Bool, Required: false},
+		"secure_boot":                  &hcldec.AttrSpec{Name: "secure_boot", Type: cty.Bool, Required: false},
+		"vtpm":                         &hcldec.AttrSpec{Name: "vtpm", Type: cty.Bool, Required: false},
 		"network_name":                 &hcldec.AttrSpec{Name: "network_name", Type: cty.String, Required: false},
 		"network_namespace":            &hcldec.AttrSpec{Name: "network_namespace", Type: cty.String, Required: false},
 		"iso_image_name":               &hcldec.AttrSpec{Name: "iso_image_name", Type: cty.String, Required: false},

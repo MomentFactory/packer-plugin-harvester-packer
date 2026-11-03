@@ -58,10 +58,40 @@ type Interface struct {
 	Bridge     interface{} `json:"bridge,omitempty"`
 }
 
+// TPMDevice attaches an emulated TPM to the VM.
+type TPMDevice struct{}
+
 // Devices spec.
 type Devices struct {
 	Disks      []DiskTarget `json:"disks,omitempty"`
 	Interfaces []Interface  `json:"interfaces,omitempty"`
+	TPM        *TPMDevice   `json:"tpm,omitempty"`
+}
+
+// EFI configures UEFI boot. SecureBoot is always serialised because KubeVirt
+// enables secure boot when the field is omitted.
+type EFI struct {
+	SecureBoot bool `json:"secureBoot"`
+}
+
+// Bootloader selects the VM firmware. KubeVirt uses BIOS when EFI is nil.
+type Bootloader struct {
+	EFI *EFI `json:"efi,omitempty"`
+}
+
+// Firmware spec.
+type Firmware struct {
+	Bootloader *Bootloader `json:"bootloader,omitempty"`
+}
+
+// FeatureState toggles a hypervisor feature.
+type FeatureState struct {
+	Enabled bool `json:"enabled"`
+}
+
+// Features spec. SMM is required for UEFI secure boot.
+type Features struct {
+	SMM *FeatureState `json:"smm,omitempty"`
 }
 
 // Domain spec.
@@ -69,6 +99,8 @@ type Domain struct {
 	CPU       CPU                  `json:"cpu,omitempty"`
 	Resources ResourceRequirements `json:"resources,omitempty"`
 	Devices   Devices              `json:"devices,omitempty"`
+	Firmware  *Firmware            `json:"firmware,omitempty"`
+	Features  *Features            `json:"features,omitempty"`
 }
 
 // Network spec.

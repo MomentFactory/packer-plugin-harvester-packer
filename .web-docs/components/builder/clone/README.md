@@ -65,6 +65,17 @@ running provisioners, and exporting the customised disk as a new
 - `storage_class` (string) - Kubernetes StorageClass for persistent volumes.
   Defaults to `"harvester-longhorn"`.
 
+- `efi_boot` (bool) - Boot the build VM with UEFI firmware instead of BIOS.
+  Defaults to `false`. This only affects the build VM: Harvester images carry
+  no firmware setting, so VMs created from the output image must enable UEFI
+  themselves.
+
+- `secure_boot` (bool) - Enable UEFI secure boot (and the SMM feature it
+  requires). Requires `efi_boot`. Defaults to `false`.
+
+- `vtpm` (bool) - Attach an emulated, non-persistent TPM to the build VM.
+  Defaults to `false`.
+
 - `network_name` (string) - Name of the Harvester network attachment or leave
   empty to use the default pod network.
 
