@@ -4,9 +4,13 @@
 package harvester
 
 import (
+	"encoding/json"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
+
+	hvclient "github.com/hulto/packer-plugin-harvester/builder/harvester/client"
 )
 
 func TestAppendCloudInitNoCloudDiskAndVolume(t *testing.T) {
@@ -73,4 +77,59 @@ func TestTrackCleanupPVCName(t *testing.T) {
 	if again := trackedCleanupPVCNames(state); again[0] != "pvc-one" {
 		t.Fatalf("expected tracked PVCs to be returned as a copy, got %v", again)
 	}
+}
+
+func TestApplyFirmwareConfig(t *testing.T) {
+	marshal := func(t *testing.T, d hvclient.Domain) string {
+		t.Helper()
+		b, err := json.Marshal(d)
+		if err != nil {
+			t.Fatalf("marshal domain: %v", err)
+		}
+		return string(b)
+	}
+
+	t.Run("defaults_leave_domain_untouched", func(t *testing.T) {
+		var domain hvclient.Domain
+		applyFirmwareConfig(&domain, &Config{})
+		if domain.Firmware != nil || domain.Features != nil || domain.Devices.TPM != nil {
+			t.Fatalf("expected no firmware/features/tpm, got %s", marshal(t, domain))
+		}
+	})
+
+	t.Run("efi_without_secure_boot", func(t *testing.T) {
+		var domain hvclient.Domain
+		applyFirmwareConfig(&domain, &Config{EFIBoot: true})
+		got := marshal(t, domain)
+		// secureBoot must be explicit: KubeVirt defaults it to true when omitted.
+		want := `"firmware":{"bootloader":{"efi":{"secureBoot":false}}}`
+		if !strings.Contains(got, want) {
+			t.Fatalf("expected %s in %s", want, got)
+		}
+		if domain.Features != nil {
+			t.Fatalf("expected no features without secure boot, got %s", got)
+		}
+	})
+
+	t.Run("efi_with_secure_boot_enables_smm", func(t *testing.T) {
+		var domain hvclient.Domain
+		applyFirmwareConfig(&domain, &Config{EFIBoot: true, SecureBoot: true})
+		got := marshal(t, domain)
+		for _, want := range []string{
+			`"firmware":{"bootloader":{"efi":{"secureBoot":true}}}`,
+			`"features":{"smm":{"enabled":true}}`,
+		} {
+			if !strings.Contains(got, want) {
+				t.Fatalf("expected %s in %s", want, got)
+			}
+		}
+	})
+
+	t.Run("vtpm", func(t *testing.T) {
+		var domain hvclient.Domain
+		applyFirmwareConfig(&domain, &Config{VTPM: true})
+		if got := marshal(t, domain); !strings.Contains(got, `"tpm":{}`) {
+			t.Fatalf("expected tpm device in %s", got)
+		}
+	})
 }
