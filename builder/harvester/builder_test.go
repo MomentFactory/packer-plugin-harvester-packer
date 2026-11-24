@@ -317,6 +317,29 @@ func TestChooseStorageClass(t *testing.T) {
 	}
 }
 
+func TestChooseCloneStorageClass(t *testing.T) {
+	tests := []struct {
+		name     string
+		configSC string
+		imageSC  string
+		want     string
+	}{
+		{name: "image_over_default", configSC: hvclient.DefaultStorageClass, imageSC: "lh-image", want: "lh-image"},
+		{name: "image_over_empty", configSC: "", imageSC: "lh-image", want: "lh-image"},
+		// An explicit class would produce a blank disk without the image's backingImage.
+		{name: "image_over_explicit_config", configSC: "simple-longhorn-vmdata", imageSC: "lh-image", want: "lh-image"},
+		{name: "config_when_image_empty", configSC: "fast-ssd", imageSC: "", want: "fast-ssd"},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := chooseCloneStorageClass(tc.configSC, tc.imageSC); got != tc.want {
+				t.Fatalf("chooseCloneStorageClass(%q, %q) = %q, want %q", tc.configSC, tc.imageSC, got, tc.want)
+			}
+		})
+	}
+}
+
 func TestChooseISOCDROMStorageClass(t *testing.T) {
 	tests := []struct {
 		name   string

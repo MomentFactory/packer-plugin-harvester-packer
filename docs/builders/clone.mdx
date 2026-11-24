@@ -66,7 +66,11 @@ running provisioners, and exporting the customised disk as a new
   `"40Gi"`.
 
 - `storage_class` (string) - Kubernetes StorageClass for persistent volumes.
-  Defaults to `"harvester-longhorn"`.
+  Defaults to `"harvester-longhorn"`. Not used for the root disk, which always
+  takes the source image's storage class: Harvester copies the image data
+  through that class, and any other class would create a blank disk. To
+  control where the root disk is stored, set the storage class parameters on
+  the source image itself.
 
 - `efi_boot` (bool) - Boot the build VM with UEFI firmware instead of BIOS.
   Defaults to `false`. This only affects the build VM: Harvester images carry
