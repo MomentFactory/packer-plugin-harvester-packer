@@ -129,6 +129,13 @@ type Config struct {
 	// Defaults to Namespace.
 	OutputImageNamespace string `mapstructure:"output_image_namespace"`
 
+	// OutputImageStorageClassParameters are the Longhorn storage class
+	// parameters of the output VirtualMachineImage, e.g.
+	// {diskSelector = "vm-data", numberOfReplicas = "1"}. The clone builder
+	// copies them from the source image when omitted; otherwise Harvester
+	// applies its defaults.
+	OutputImageStorageClassParameters map[string]string `mapstructure:"output_image_storage_class_parameters"`
+
 	// --- Boot ---
 
 	// BootCommand is a list of commands to send to the VM via the VNC console

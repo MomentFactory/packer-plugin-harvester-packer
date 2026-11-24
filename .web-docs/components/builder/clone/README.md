@@ -95,6 +95,12 @@ running provisioners, and exporting the customised disk as a new
 - `output_image_namespace` (string) - Namespace for the output image. Defaults
   to `namespace`.
 
+- `output_image_storage_class_parameters` (map of strings) - Longhorn
+  parameters of the storage class Harvester creates for the output image,
+  e.g. `{ diskSelector = "vm-data", numberOfReplicas = "1" }`. They decide
+  where VMs created from the image store their disks. Defaults to the source image's
+  storage class parameters.
+
 - `wait_for_instance_timeout` (duration string) - Maximum time to wait for the
   VM to reach Running state. Defaults to `"10m"`.
 

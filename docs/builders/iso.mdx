@@ -99,6 +99,12 @@ the root disk as a `VirtualMachineImage`.
 - `output_image_namespace` (string) - Namespace for the output image. Defaults
   to `namespace`.
 
+- `output_image_storage_class_parameters` (map of strings) - Longhorn
+  parameters of the storage class Harvester creates for the output image,
+  e.g. `{ diskSelector = "vm-data", numberOfReplicas = "1" }`. They decide
+  where VMs created from the image store their disks. When omitted, Harvester applies its
+  defaults.
+
 - `boot_command` (list of strings) - Commands to send to the VM via VNC
   immediately after boot. Supports special tokens like `<enter>`, `<wait>`,
   `<f1>`–`<f12>`, `<leftCtrl>`, etc.
