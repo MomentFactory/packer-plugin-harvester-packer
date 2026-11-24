@@ -218,8 +218,11 @@ func (s *StepCreateVM) buildVMSpec(state multistep.StateBag, client *hvclient.Ha
 		}
 		srcImageID := fmt.Sprintf("%s/%s", srcImage.ObjectMeta.Namespace, srcImage.ObjectMeta.Name)
 		ui.Say(fmt.Sprintf("Using source image %q (id: %s)", cfg.SourceImageName, srcImageID))
-		storageClass := chooseStorageClass(cfg.StorageClass, srcImage.Status.StorageClassName)
+		storageClass := chooseCloneStorageClass(cfg.StorageClass, srcImage.Status.StorageClassName)
 		if storageClass != cfg.StorageClass {
+			if cfg.StorageClass != "" && cfg.StorageClass != hvclient.DefaultStorageClass {
+				ui.Error(fmt.Sprintf("Ignoring storage_class %q for the root disk: a disk cloned from an image must use the image's storage class, otherwise it is created blank", cfg.StorageClass))
+			}
 			ui.Say(fmt.Sprintf("Using image storage class %q (from source image)", storageClass))
 		}
 
@@ -439,6 +442,17 @@ func imageSizeToGi(sizeBytes int64) string {
 
 func chooseStorageClass(configStorageClass, imageStorageClass string) string {
 	if imageStorageClass != "" && (configStorageClass == "" || configStorageClass == hvclient.DefaultStorageClass) {
+		return imageStorageClass
+	}
+	return configStorageClass
+}
+
+// chooseCloneStorageClass picks the storage class for a disk cloned from an
+// image. Harvester copies the image data through the image's own storage
+// class (its Longhorn backingImage parameter), so any other class yields a
+// blank disk; the configured class is only used when the image has none.
+func chooseCloneStorageClass(configStorageClass, imageStorageClass string) string {
+	if imageStorageClass != "" {
 		return imageStorageClass
 	}
 	return configStorageClass
