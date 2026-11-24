@@ -297,6 +297,9 @@ type VirtualMachineImageSpec struct {
 	URL          string `json:"url,omitempty"`
 	PVCName      string `json:"pvcName,omitempty"`
 	PVCNamespace string `json:"pvcNamespace,omitempty"`
+	// StorageClassParameters are the Longhorn parameters of the storage class
+	// Harvester creates for the image (e.g. diskSelector, numberOfReplicas).
+	StorageClassParameters map[string]string `json:"storageClassParameters,omitempty"`
 }
 
 // VirtualMachineImageCondition is a single condition on a VirtualMachineImage.

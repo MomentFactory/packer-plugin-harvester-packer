@@ -31,6 +31,10 @@ type StepCreateVM struct {
 
 const cleanupAuxCDPVCNamesStateKey = "cleanup_aux_cd_pvc_names"
 
+// sourceImageSCParamsStateKey holds the clone source image's storage class
+// parameters so StepCreateImage can give the output image the same ones.
+const sourceImageSCParamsStateKey = "source_image_storage_class_parameters"
+
 // Run creates the Harvester VirtualMachine.
 func (s *StepCreateVM) Run(_ context.Context, state multistep.StateBag) multistep.StepAction {
 	ui := state.Get("ui").(packersdk.Ui)
@@ -218,6 +222,7 @@ func (s *StepCreateVM) buildVMSpec(state multistep.StateBag, client *hvclient.Ha
 		}
 		srcImageID := fmt.Sprintf("%s/%s", srcImage.ObjectMeta.Namespace, srcImage.ObjectMeta.Name)
 		ui.Say(fmt.Sprintf("Using source image %q (id: %s)", cfg.SourceImageName, srcImageID))
+		state.Put(sourceImageSCParamsStateKey, srcImage.Spec.StorageClassParameters)
 		storageClass := chooseCloneStorageClass(cfg.StorageClass, srcImage.Status.StorageClassName)
 		if storageClass != cfg.StorageClass {
 			if cfg.StorageClass != "" && cfg.StorageClass != hvclient.DefaultStorageClass {

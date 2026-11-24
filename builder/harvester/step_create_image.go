@@ -58,9 +58,13 @@ func (s *StepCreateImage) Run(ctx context.Context, state multistep.StateBag) mul
 		Spec: hvclient.VirtualMachineImageSpec{
 			DisplayName:  displayName,
 			SourceType:   "export-from-volume",
-			PVCName:      rootDiskPVC,
-			PVCNamespace: cfg.Namespace,
+			PVCName:                rootDiskPVC,
+			PVCNamespace:           cfg.Namespace,
+			StorageClassParameters: outputImageStorageClassParameters(cfg, state),
 		},
+	}
+	if params := img.Spec.StorageClassParameters; len(params) > 0 {
+		ui.Say(fmt.Sprintf("Output image storage class parameters: %v", params))
 	}
 
 	created, err := client.CreateVMImage(img)
@@ -136,4 +140,22 @@ func (s *StepCreateImage) Cleanup(state multistep.StateBag) {
 	if err := client.DeleteVMImage(s.Config.OutputImageNamespace, s.imageName); err != nil {
 		ui.Error(fmt.Sprintf("Warning: failed to delete image %q: %s", s.imageName, err))
 	}
+}
+
+// outputImageStorageClassParameters returns the storage class parameters for
+// the output image: the configured ones, else those of the clone source image
+// (so e.g. its diskSelector carries over), else nil to let Harvester default.
+func outputImageStorageClassParameters(cfg *Config, state multistep.StateBag) map[string]string {
+	src := cfg.OutputImageStorageClassParameters
+	if len(src) == 0 {
+		src, _ = state.Get(sourceImageSCParamsStateKey).(map[string]string)
+	}
+	if len(src) == 0 {
+		return nil
+	}
+	params := make(map[string]string, len(src))
+	for k, v := range src {
+		params[k] = v
+	}
+	return params
 }
